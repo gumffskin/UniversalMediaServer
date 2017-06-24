@@ -32,6 +32,7 @@ import javax.swing.*;
 import net.pms.Messages;
 import net.pms.configuration.DeviceConfiguration;
 import net.pms.configuration.PmsConfiguration;
+import net.pms.configuration.RendererConfiguration;
 import net.pms.dlna.DLNAMediaInfo;
 import net.pms.dlna.DLNAResource;
 import net.pms.formats.Format;
@@ -41,6 +42,7 @@ import net.pms.io.ProcessWrapperImpl;
 import net.pms.network.HTTPResource;
 import net.pms.newgui.GuiUtil;
 import net.pms.util.PlayerUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -142,7 +144,7 @@ public class FFmpegAudio extends FFMpegVideo {
 		configuration = (DeviceConfiguration)params.mediaRenderer;
 		final String filename = dlna.getFileName();
 		params.maxBufferSize = configuration.getMaxAudioBuffer();
-		params.waitbeforestart = 2000;
+		params.waitbeforestart = 1;
 		params.manageFastStart();
 
 		/*
@@ -200,30 +202,53 @@ public class FFmpegAudio extends FFMpegVideo {
 			cmdList.add("" + params.timeend);
 		}
 
+		String customAudioFFmpegOptions = params.mediaRenderer.getCustomAudioFFmpegOptions();
+
+		// Add audio options (-af, -filter_complex, -ab, -ar, -ac, -c:a, -f, -apre, -fpre, -pre, etc.)
+		if (StringUtils.isNotEmpty(customAudioFFmpegOptions)) {
+			parseOptions(customAudioFFmpegOptions, cmdList);
+		}
+
 		if (params.mediaRenderer.isTranscodeToMP3()) {
-			cmdList.add("-f");
-			cmdList.add("mp3");
-			cmdList.add("-ab");
-			cmdList.add("320000");
+			if (!customAudioFFmpegOptions.contains("-ab ")) {
+				cmdList.add("-ab");
+				cmdList.add("320000");
+			}
+			if (!customAudioFFmpegOptions.contains("-f ")) {
+				cmdList.add("-f");
+				cmdList.add("mp3");
+			}
 		} else if (params.mediaRenderer.isTranscodeToWAV()) {
-			cmdList.add("-f");
-			cmdList.add("wav");
+			if (!customAudioFFmpegOptions.contains("-f ")) {
+				cmdList.add("-f");
+				cmdList.add("wav");
+			}
 		} else { // default: LPCM
-			cmdList.add("-f");
-			cmdList.add("s16be");
+			if (!customAudioFFmpegOptions.contains("-f ")) {
+				cmdList.add("-f");
+				cmdList.add("s16be");
+			}
 		}
 
 		if (configuration.isAudioResample()) {
 			if (params.mediaRenderer.isTranscodeAudioTo441()) {
-				cmdList.add("-ar");
-				cmdList.add("44100");
-				cmdList.add("-ac");
-				cmdList.add("2");
+				if (!customAudioFFmpegOptions.contains("-ar ")) {
+					cmdList.add("-ar");
+					cmdList.add("44100");
+				}
+				if (!customAudioFFmpegOptions.contains("-ac ")) {
+					cmdList.add("-ac");
+					cmdList.add("2");
+				}
 			} else {
-				cmdList.add("-ar");
-				cmdList.add("48000");
-				cmdList.add("-ac");
-				cmdList.add("2");
+				if (!customAudioFFmpegOptions.contains("-ar ")) {
+					cmdList.add("-ar");
+					cmdList.add("48000");
+				}
+				if (!customAudioFFmpegOptions.contains("-ac ")) {
+					cmdList.add("-ac");
+					cmdList.add("2");
+				}
 			}
 		}
 
@@ -245,6 +270,44 @@ public class FFmpegAudio extends FFMpegVideo {
 
 		configuration = prev;
 		return pw;
+	}
+
+	/**
+	 * A simple arguments parser with basic quote comprehension.
+	 */
+	protected static List<String> parseOptions(String str) {
+		return str == null ? null : parseOptions(str, new ArrayList<String>());
+	}
+
+	protected static List<String> parseOptions(String str, List<String> cmdList) {
+		int start, pos = 0, len = str.length();
+		while (pos < len) {
+			// New argument
+			if (str.charAt(pos) == '\"') {
+				start = pos + 1;
+				// Find next quote. No support for escaped quotes here, and
+				// -1 means no matching quote but be lax and accept the fragment anyway
+				pos = str.indexOf('"', start);
+			} else {
+				start = pos;
+				// Find next space
+				pos = str.indexOf(' ', start);
+			}
+			if (pos == -1) {
+				// We're done
+				pos = len;
+			}
+			// Add the argument, if any
+			if (pos - start > 0) {
+				cmdList.add(str.substring(start, pos).trim());
+			}
+			pos++;
+			// Advance to next non-space character
+			while (pos < len && str.charAt(pos) == ' ') {
+				pos++;
+			}
+		}
+		return cmdList;
 	}
 
 	@Override

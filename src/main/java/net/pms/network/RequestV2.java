@@ -839,7 +839,7 @@ public class RequestV2 extends HTTPResource {
 
 				int filessize = 0;
 				if (files != null) {
-					filessize = files.size();
+					filessize = files.size(); //TODO: (Nad) Here
 				}
 
 				response.append("<NumberReturned>").append(filessize - minus).append("</NumberReturned>");
@@ -859,15 +859,38 @@ public class RequestV2 extends HTTPResource {
 					// let's send a fake total size to force the renderer to ask following items
 					int totalCount = startingIndex + requestCount + 1; // returns 11 when 10 asked
 
+					LOGGER.info("RequestV2: Using DLNA tree hack, totalCount = {}", totalCount);
 					// If no more elements, send the startingIndex
 					if (filessize - minus <= 0) {
 						totalCount = startingIndex;
+						LOGGER.info("RequestV2: Resetting totalCount to startingIndex");
 					}
+					LOGGER.info(
+						"RequestV2: totalCount = {}, startingIndex = {}, requestCount = {}, files.size() = {}, filessize = {}, minus = {}",
+						totalCount,
+						startingIndex,
+						requestCount,
+						files != null ? files.size() : "null",
+						filessize,
+						minus
+					);
 
 					response.append("<TotalMatches>").append(totalCount).append("</TotalMatches>");
 				} else if (browseDirectChildren) {
+					LOGGER.info(
+						"RequestV2: browseDirectChildren:totalCount = {}, parentFolder.childrenNumber() = {}, startingIndex = {}, requestCount = {}, files.size() = {}, filessize = {}, minus = {}",
+						((parentFolder != null) ? parentFolder.childrenNumber() : filessize) - minus,
+						parentFolder != null ? parentFolder.childrenNumber() : "null",
+						startingIndex,
+						requestCount,
+						files != null ? files.size() : "null",
+						filessize,
+						minus
+					);
+
 					response.append("<TotalMatches>").append(((parentFolder != null) ? parentFolder.childrenNumber() : filessize) - minus).append("</TotalMatches>");
 				} else {
+					LOGGER.info("RequestV2: browseMetaData: returning 1 as per standard");
 					// From upnp spec: If BrowseMetadata is specified in the BrowseFlags then TotalMatches = 1
 					response.append("<TotalMatches>1</TotalMatches>");
 				}

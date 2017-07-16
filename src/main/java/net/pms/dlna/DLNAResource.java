@@ -2742,7 +2742,7 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 	 *            for no filtering.
 	 */
 	@SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
-	private void appendImage(StringBuilder sb, Renderer renderer) {
+	private void appendImage(StringBuilder sb, RendererConfiguration renderer) {
 		/*
 		 * There's no technical difference between the image itself and the
 		 * thumbnail for an object.item.imageItem, they are all simply listed
@@ -2872,7 +2872,7 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 	 *            for no filtering.
 	 */
 	@SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
-	private void appendThumbnail(StringBuilder sb, MediaType mediaType, Renderer renderer) {
+	private void appendThumbnail(StringBuilder sb, MediaType mediaType, RendererConfiguration renderer) {
 
 		/*
 		 * JPEG_TN = Max 160 x 160; EXIF Ver.1.x or later or JFIF 1.02; SRGB or uncalibrated
@@ -2986,8 +2986,10 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 			// Sort the elements by priority
 			Collections.sort(resElements, DLNAImageResElement.getComparator(imageInfo != null ? imageInfo.getFormat() : ImageFormat.JPEG));
 
-			for (DLNAImageResElement resElement : resElements) {
-				addImageResource(sb, resElement);
+			if (renderer == null || !renderer.isXbox360()) {
+				for (DLNAImageResElement resElement : resElements) {
+					addImageResource(sb, resElement);
+				}
 			}
 
 			for (DLNAImageResElement resElement : resElements) {

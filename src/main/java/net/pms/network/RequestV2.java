@@ -768,7 +768,11 @@ public class RequestV2 extends HTTPResource {
 
 				response.append(CRLF);
 				response.append(HTTPXMLHelper.RESULT_HEADER);
-				response.append(HTTPXMLHelper.DIDL_HEADER);
+				if (xbox360) {
+					response.append(HTTPXMLHelper.DIDL_HEADER.replace(" xmlns:sec=\"http://www.sec.co.kr/\" xmlns:pv=\"http://www.pv.com/pvns/\"", ""));
+				} else {
+					response.append(HTTPXMLHelper.DIDL_HEADER);
+				}
 
 				boolean browseDirectChildren = browseFlag != null && browseFlag.equals("BrowseDirectChildren");
 

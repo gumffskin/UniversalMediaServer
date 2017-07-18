@@ -2423,7 +2423,11 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 		}
 
 		addAttribute(sb, "parentID", id);
-		addAttribute(sb, "restricted", "1");
+		if (xbox360) {
+			addAttribute(sb, "restricted", "true");
+		} else {
+			addAttribute(sb, "restricted", "1");
+		}
 		endTag(sb);
 		StringBuilder wireshark = new StringBuilder();
 		final DLNAMediaAudio firstAudioTrack = media != null ? media.getFirstAudioTrack() : null;

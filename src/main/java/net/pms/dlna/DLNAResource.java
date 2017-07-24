@@ -619,7 +619,7 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 					}
 				}
 
-				LOGGER.trace("{} child \"{}\" with class \"{}\"", isNew ? "Adding new" : "Updating", child.getName(), child.getClass().getSimpleName());
+				LOGGER.trace("{} child \"{}\" with class \"{}\"", isNew ? "Adding new" : "Updating", child.getName(), child.getClass().getName());
 
 				if (allChildrenAreFolders && !child.isFolder()) {
 					allChildrenAreFolders = false;
@@ -2509,8 +2509,8 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 
 					if (media.getDuration() != null) {
 						if (getSplitRange().isEndLimitAvailable()) {
-							wireshark.append(" duration=").append(StringUtil.formatDidlLiteDuration(getSplitRange().getDuration()));
-							addAttribute(sb, "duration", StringUtil.formatDidlLiteDuration(getSplitRange().getDuration()));
+							wireshark.append(" duration=").append(convertTimeToString(getSplitRange().getDuration(), DURATION_TIME_FORMAT));
+							addAttribute(sb, "duration", convertTimeToString(getSplitRange().getDuration(), DURATION_TIME_FORMAT));
 						} else {
 							wireshark.append(" duration=").append(media.getDurationString());
 							addAttribute(sb, "duration", media.getDurationString());
@@ -2553,8 +2553,8 @@ public abstract class DLNAResource extends HTTPResource implements Cloneable, Ru
 							addAttribute(sb, "bitrate", media.getBitrate());
 						}
 						if (media.getDuration() != null && media.getDuration().doubleValue() != 0.0) {
-							wireshark.append(" duration=").append(StringUtil.formatDidlLiteDuration(media.getDuration()));
-							addAttribute(sb, "duration", StringUtil.formatDidlLiteDuration(media.getDuration()));
+							wireshark.append(" duration=").append(convertTimeToString(media.getDuration(), DURATION_TIME_FORMAT));
+							addAttribute(sb, "duration", convertTimeToString(media.getDuration(), DURATION_TIME_FORMAT));
 						}
 
 						int transcodeFrequency = -1;
